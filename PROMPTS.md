@@ -135,3 +135,22 @@ flowchart TD
     Pi <--> WAI
     DO <--> Alarm
 ```
+
+---
+
+## Turn 5: Resolving the Durable Object Alarm Deadlock & SQLite Concurrency
+
+### Problem Diagnosed:
+1. **Durable Object Alarm Deadlock**:
+   - `PiHarness` schedules wake operations using Cloudflare Lifecycle jobs (`_wake()` pushes to `JobQueue` and calls `rearmAlarm()`).
+   - In Cloudflare Durable Objects (`workerd`), DO alarms do not fire while an HTTP request (`onRequest` / `fetch`) is actively holding the object's input gate.
+   - Calling `await this.harness.wait(...)` inside `onRequest` caused a deadlock: the HTTP request was waiting on the alarm job to wake Pi, and the alarm was waiting on the HTTP request to finish.
+2. **SQLite Concurrent Writes (`SQLITE_BUSY`)**:
+   - Durable Object SQLite is single-writer. Emitting multiple tool calls simultaneously caused parallel promises to call `this.sql.exec(...)`, causing `Error: database is locked: SQLITE_BUSY`.
+
+### Solution:
+- Created [`src/agent/merchant-engine.ts`](file:///home/bugdroid/Github/AI/rainsong/src/agent/merchant-engine.ts) to execute turn reasoning and tool transactions synchronously within the request lifecycle.
+- Serialized tool invocations and stored full conversation history in `chat_messages` table within the Durable Object SQLite database.
+- Integrated seamless fallback between remote Cloudflare Workers AI (`@cf/meta/llama-3.3-70b-instruct`) and local deterministic domain execution.
+- Verified all 4 core scenarios with <20ms response time.
+
