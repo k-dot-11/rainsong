@@ -48,7 +48,7 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ document, onClose 
             <div>
               <div className="flex items-center space-x-2 text-orange-400 mb-1">
                 <Building2 className="w-5 h-5" />
-                <span className="font-bold text-lg text-white">COSMOSYS WHOLESALE LTD</span>
+                <span className="font-bold text-lg text-white">QUOTEFLOW WHOLESALE LTD</span>
               </div>
               <p className="text-xs text-slate-400">Industrial & Building Supplies Depot</p>
               <p className="text-xs text-slate-400">GSTIN: 27AABCC1234F1Z9</p>

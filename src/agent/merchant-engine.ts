@@ -64,7 +64,7 @@ export async function processMerchantTurn(
         timestamp: Date.now(),
       });
 
-      const text = `✅ Order Confirmed! Tax Invoice #${invoiceNumber} has been officially issued for Quotation #${approvedQuote.quoteNumber}.\n\nTotal Amount: ₹${invoice.total.toLocaleString("en-IN")}\nPayment Terms: ${invoice.paymentTerms}\nStatus: ${invoice.status}\n\nThank you for choosing Cosmosys Wholesale Depot!`;
+      const text = `✅ Order Confirmed! Tax Invoice #${invoiceNumber} has been officially issued for Quotation #${approvedQuote.quoteNumber}.\n\nTotal Amount: ₹${invoice.total.toLocaleString("en-IN")}\nPayment Terms: ${invoice.paymentTerms}\nStatus: ${invoice.status}\n\nThank you for choosing Quoteflow Wholesale Depot!`;
       return { text, invoice, toolCalled: "convert_to_invoice" };
     } else {
       const pendingQuote = quotations.find((q) => q.status === "PENDING_APPROVAL");
@@ -117,7 +117,7 @@ export async function processMerchantTurn(
   if (isQuestion && !hasOrderIntent) {
     const products = store.getAllProducts();
     const catalogSummary = products.map((p) => `- ${p.name} (SKU: ${p.sku}, List: ₹${p.listPrice}/${p.unit})`).join("\n");
-    const infoSystem = `You are Cosmosys Wholesale Depot AI Assistant. Answer the contractor's question accurately based on building construction domain knowledge and our catalog:\n${catalogSummary}\nKeep it friendly and formatted for WhatsApp with emojis.`;
+    const infoSystem = `You are Quoteflow Wholesale Depot AI Assistant. Answer the contractor's question accurately based on building construction domain knowledge and our catalog:\n${catalogSummary}\nKeep it friendly and formatted for WhatsApp with emojis.`;
     const answer = await callLiveLLM(userMessage, infoSystem, aiBinding, geminiApiKey);
     if (answer) {
       return { text: answer };
@@ -284,7 +284,7 @@ export async function processMerchantTurn(
   }
 
   // Invoke real live neural LLM (Cloudflare Workers AI Llama 3.3 or Google Gemini)
-  const systemInstruction = "You are Cosmosys Wholesale Depot AI Merchant Copilot on WhatsApp. You communicate with building contractors in India. Keep responses polite, concise, professional, and formatted for WhatsApp with emojis. Always retain exact figures and quotation numbers.";
+  const systemInstruction = "You are Quoteflow Wholesale Depot AI Merchant Copilot on WhatsApp. You communicate with building contractors in India. Keep responses polite, concise, professional, and formatted for WhatsApp with emojis. Always retain exact figures and quotation numbers.";
   const modelPrompt = `Customer message: "${userMessage}"
 Action taken: Generated Quotation #${quoteNumber} for ₹${total.toLocaleString("en-IN")} (${quoteItems.map((i) => `${i.quantity} ${i.unit} of ${i.name}`).join(", ")}).
 Status: ${status} (Gross Margin: ${overallMarginPercent}%).

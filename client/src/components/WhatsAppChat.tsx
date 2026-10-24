@@ -42,7 +42,7 @@ export const WhatsAppChat: React.FC<WhatsAppChatProps> = ({
     {
       id: "m-init",
       sender: "agent",
-      text: "Namaste! Welcome to Cosmosys Wholesale Depot. I can help with wholesale rates, stock availability, and instant quotations for Cement, Electricals, Pipes, Paints, and Rebar (Saria). What do you need today?",
+      text: "Namaste! Welcome to Quoteflow Wholesale Depot. I can help with wholesale rates, stock availability, and instant quotations for Cement, Electricals, Pipes, Paints, and Rebar (Saria). What do you need today?",
       timestamp: "10:00 AM",
     },
   ]);
@@ -199,13 +199,13 @@ export const WhatsAppChat: React.FC<WhatsAppChatProps> = ({
         <div className="flex items-center space-x-3">
           <div className="relative">
             <div className="w-10 h-10 rounded-full bg-emerald-700 flex items-center justify-center font-bold text-white shadow">
-              CQ
+              QF
             </div>
             <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 border-2 border-slate-900 rounded-full"></span>
           </div>
           <div>
             <div className="flex items-center space-x-1.5">
-              <h2 className="font-semibold text-white text-sm">Cosmosys QuoteFlow</h2>
+              <h2 className="font-semibold text-white text-sm">QuoteFlow</h2>
               <span className="px-1.5 py-0.2 bg-emerald-500/20 text-emerald-400 text-[10px] rounded font-medium border border-emerald-500/30">
                 Verified Merchant
               </span>

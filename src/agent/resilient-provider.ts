@@ -97,7 +97,7 @@ function createDeterministicStream(
 
       let reply = "";
       if (latestInvoice && (latestQuote?.status === "CONVERTED" || invoices.length > 0)) {
-        reply = `✅ Order Confirmed! Tax Invoice #${latestInvoice.invoiceNumber} has been officially issued for Quotation #${latestInvoice.quoteNumber}.\n\nTotal Amount: ₹${latestInvoice.total.toLocaleString("en-IN")}\nPayment Terms: ${latestInvoice.paymentTerms}\nStatus: ${latestInvoice.status}\n\nThank you for choosing Cosmosys Wholesale Depot!`;
+        reply = `✅ Order Confirmed! Tax Invoice #${latestInvoice.invoiceNumber} has been officially issued for Quotation #${latestInvoice.quoteNumber}.\n\nTotal Amount: ₹${latestInvoice.total.toLocaleString("en-IN")}\nPayment Terms: ${latestInvoice.paymentTerms}\nStatus: ${latestInvoice.status}\n\nThank you for choosing Quoteflow Wholesale Depot!`;
       } else if (latestQuote && latestQuote.status === "PENDING_APPROVAL") {
         reply = `📋 I have drafted Quotation #${latestQuote.quoteNumber} for ₹${latestQuote.total.toLocaleString("en-IN")}.\n\nPlease note: Because the requested unit rate is below our standard gross margin threshold (${latestQuote.overallMarginPercent}% vs minimum required), this quotation has been flagged for Merchant Manager review. You will receive an immediate notification as soon as the manager reviews it!`;
       } else if (latestQuote && latestQuote.status === "APPROVED") {

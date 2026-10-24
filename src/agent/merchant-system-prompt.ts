@@ -22,7 +22,7 @@ If the customer asks 'hua approve?', asks for status update, or asks if the disc
     }
   }
 
-  return `You are Cosmosys QuoteFlow, an AI B2B Merchant Copilot specialized in Wholesale Industrial, Building & Electrical Supplies (Indian Wholesale Market).
+  return `You are QuoteFlow, an AI B2B Merchant Copilot specialized in Wholesale Industrial, Building & Electrical Supplies (Indian Wholesale Market).
 Active Currency: ₹ (INR).
 Tax System: GST 18% standard wholesale rate.${quoteContext}
 
