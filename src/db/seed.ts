@@ -1,0 +1,240 @@
+import { Product } from "../shared/types";
+
+export const INITIAL_PRODUCTS: Product[] = [
+  // Cement & Masonry
+  {
+    id: "ind-1",
+    sku: "SKU-IND-CEMT-53G",
+    name: "UltraTech 53 Grade OPC Cement (50kg Bag)",
+    category: "Cement & Masonry",
+    unit: "bag",
+    costPrice: 340.0,
+    listPrice: 420.0,
+    minMarginPercent: 15,
+    stockQuantity: 1800,
+    currency: "INR",
+    currencySymbol: "₹",
+    nicknames: [
+      "53 grade",
+      "ultratech 53",
+      "53 cement",
+      "gray cement",
+      "opc 53",
+      "cement bag",
+      "ultratech bag"
+    ],
+  },
+  {
+    id: "ind-2",
+    sku: "SKU-IND-PUTTY-40KG",
+    name: "Birla White Wall Care Putty (40kg Bag)",
+    category: "Cement & Masonry",
+    unit: "bag",
+    costPrice: 720.0,
+    listPrice: 920.0,
+    minMarginPercent: 18,
+    stockQuantity: 500,
+    currency: "INR",
+    currencySymbol: "₹",
+    nicknames: [
+      "wall putty",
+      "birla putty",
+      "white putty",
+      "putty 40kg",
+      "wallcare",
+      "birla white"
+    ],
+  },
+  {
+    id: "ind-3",
+    sku: "SKU-IND-AAC-BLK-4IN",
+    name: "Siporex AAC Lightweight Block 4\" (600x200x100mm)",
+    category: "Cement & Masonry",
+    unit: "block",
+    costPrice: 52.0,
+    listPrice: 68.0,
+    minMarginPercent: 20,
+    stockQuantity: 2400,
+    currency: "INR",
+    currencySymbol: "₹",
+    nicknames: [
+      "aac block",
+      "light block",
+      "siporex",
+      "white bricks",
+      "flyash block"
+    ],
+  },
+
+  // Electricals & Wiring
+  {
+    id: "ind-4",
+    sku: "SKU-IND-WIRE-2.5MM",
+    name: "Finolex 2.5 sq mm FR Flame Retardant Wire (90m Coil)",
+    category: "Electricals",
+    unit: "coil",
+    costPrice: 1650.0,
+    listPrice: 2100.0,
+    minMarginPercent: 16,
+    stockQuantity: 650,
+    currency: "INR",
+    currencySymbol: "₹",
+    nicknames: [
+      "2.5 wire",
+      "finolex 2.5",
+      "2.5mm copper wire",
+      "red wire bundle",
+      "2.5 coil",
+      "finolex wire"
+    ],
+  },
+  {
+    id: "ind-5",
+    sku: "SKU-IND-SWT-6A",
+    name: "Anchor Roma Modular 1-Way Switch 6A (Box of 20)",
+    category: "Electricals",
+    unit: "box",
+    costPrice: 480.0,
+    listPrice: 640.0,
+    minMarginPercent: 22,
+    stockQuantity: 400,
+    currency: "INR",
+    currencySymbol: "₹",
+    nicknames: [
+      "roma switch",
+      "anchor roma",
+      "6a switch",
+      "modular switch",
+      "switch box"
+    ],
+  },
+  {
+    id: "ind-6",
+    sku: "SKU-IND-MCB-32A-DP",
+    name: "Schneider Acti9 32A Double Pole C-Curve MCB",
+    category: "Electricals",
+    unit: "piece",
+    costPrice: 590.0,
+    listPrice: 780.0,
+    minMarginPercent: 20,
+    stockQuantity: 250,
+    currency: "INR",
+    currencySymbol: "₹",
+    nicknames: [
+      "32a mcb",
+      "schneider mcb",
+      "double pole mcb",
+      "dp mcb",
+      "circuit breaker"
+    ],
+  },
+
+  // Paints & Waterproofing
+  {
+    id: "ind-7",
+    sku: "SKU-IND-APEX-20L",
+    name: "Asian Paints Apex Weatherproof Exterior Emulsion (20L Bucket)",
+    category: "Paints & Waterproofing",
+    unit: "bucket",
+    costPrice: 3800.0,
+    listPrice: 4750.0,
+    minMarginPercent: 18,
+    stockQuantity: 320,
+    currency: "INR",
+    currencySymbol: "₹",
+    nicknames: [
+      "apex paint",
+      "apex 20l",
+      "exterior paint",
+      "asian paints apex",
+      "baalti",
+      "exterior bucket"
+    ],
+  },
+  {
+    id: "ind-8",
+    sku: "SKU-IND-LWPLUS-20L",
+    name: "Dr. Fixit 101 LW+ Integral Liquid Waterproofing (20L Container)",
+    category: "Paints & Waterproofing",
+    unit: "can",
+    costPrice: 1950.0,
+    listPrice: 2550.0,
+    minMarginPercent: 20,
+    stockQuantity: 220,
+    currency: "INR",
+    currencySymbol: "₹",
+    nicknames: [
+      "dr fixit",
+      "waterproofing chemical",
+      "lw plus",
+      "lw+ 20l",
+      "concrete chemical",
+      "fixit can"
+    ],
+  },
+
+  // Plumbing & Pipes
+  {
+    id: "ind-9",
+    sku: "SKU-IND-CPVC-1IN",
+    name: "Astral CPVC Pro SDR 11 Pipe 1 Inch (3m Length)",
+    category: "Plumbing & Pipes",
+    unit: "pipe",
+    costPrice: 280.0,
+    listPrice: 375.0,
+    minMarginPercent: 22,
+    stockQuantity: 950,
+    currency: "INR",
+    currencySymbol: "₹",
+    nicknames: [
+      "astral pipe",
+      "cpvc 1 inch",
+      "hot water pipe",
+      "1 inch cpvc",
+      "astral cpvc"
+    ],
+  },
+  {
+    id: "ind-10",
+    sku: "SKU-IND-PVC-SWR-4IN",
+    name: "Supreme 4 Inch SWR Drainage Pipe (10ft Length)",
+    category: "Plumbing & Pipes",
+    unit: "pipe",
+    costPrice: 420.0,
+    listPrice: 560.0,
+    minMarginPercent: 20,
+    stockQuantity: 700,
+    currency: "INR",
+    currencySymbol: "₹",
+    nicknames: [
+      "4 inch pvc",
+      "drainage pipe",
+      "swr pipe",
+      "supreme 4 inch",
+      "sewage pipe"
+    ],
+  },
+
+  // Steel & Rebar
+  {
+    id: "ind-11",
+    sku: "SKU-IND-STEEL-12MM",
+    name: "Tata Tiscon 550D TMT Rebar 12mm (Bundle of 5 rods)",
+    category: "Steel & Hardware",
+    unit: "bundle",
+    costPrice: 3200.0,
+    listPrice: 3850.0,
+    minMarginPercent: 14,
+    stockQuantity: 450,
+    currency: "INR",
+    currencySymbol: "₹",
+    nicknames: [
+      "saria",
+      "12mm saria",
+      "tata tiscon",
+      "tmt bar",
+      "12mm steel",
+      "tiscon 12"
+    ],
+  }
+];

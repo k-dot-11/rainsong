@@ -1,0 +1,19 @@
+name = "quoteflow-edge"
+main = "src/index.ts"
+compatibility_date = "2026-10-24"
+compatibility_flags = [ "nodejs_compat" ]
+
+[ai]
+binding = "AI"
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+
+[[durable_objects.bindings]]
+name = "MERCHANT_AGENT"
+class_name = "MerchantAssistant"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = [ "MerchantAssistant" ]
