@@ -12,6 +12,7 @@ import { processMerchantTurn } from "./agent/merchant-engine";
 
 export interface Env {
   AI: any;
+  GEMINI_API_KEY?: string;
   MERCHANT_AGENT: DurableObjectNamespace<MerchantAssistant>;
   ASSETS?: Fetcher;
 }
@@ -123,8 +124,13 @@ export class MerchantAssistant extends DurableObject<Env> {
         // Record incoming user message in Durable Object SQLite
         this.store.saveMessage("user", body.message);
 
-        // Process turn with Workers AI / edge merchant engine
-        const turnResult = await processMerchantTurn(this.store, body.message, this.env.AI);
+        // Process turn with Workers AI or live Gemini LLM
+        const turnResult = await processMerchantTurn(
+          this.store,
+          body.message,
+          this.env.AI,
+          this.env.GEMINI_API_KEY
+        );
 
         // Record agent reply in Durable Object SQLite
         this.store.saveMessage("assistant", turnResult.text, {

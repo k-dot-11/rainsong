@@ -11,7 +11,8 @@ export interface TurnResult {
 export async function processMerchantTurn(
   store: SqliteStore,
   userMessage: string,
-  aiBinding?: any
+  aiBinding?: any,
+  geminiApiKey?: string
 ): Promise<TurnResult> {
   const lower = userMessage.toLowerCase().trim();
 
@@ -109,7 +110,21 @@ export async function processMerchantTurn(
     };
   }
 
-  // 3. Wholesale RFQ / Pricing Request
+  // 3. Informational Question answering (without quotation generation)
+  const isQuestion = lower.includes("?") || lower.includes("difference") || lower.includes("kya") || lower.includes("how") || lower.includes("kahan") || lower.includes("where") || lower.includes("specs") || lower.includes("detail");
+  const hasOrderIntent = lower.includes("need") || lower.includes("chahiye") || lower.includes("bhejo") || lower.includes("send") || lower.includes("quote") || lower.includes("order") || lower.includes("rate") || lower.includes("price") || lower.includes("de do") || lower.includes("bag") || lower.includes("coil") || lower.includes("bundle") || lower.includes("bucket");
+
+  if (isQuestion && !hasOrderIntent) {
+    const products = store.getAllProducts();
+    const catalogSummary = products.map((p) => `- ${p.name} (SKU: ${p.sku}, List: ₹${p.listPrice}/${p.unit})`).join("\n");
+    const infoSystem = `You are Cosmosys Wholesale Depot AI Assistant. Answer the contractor's question accurately based on building construction domain knowledge and our catalog:\n${catalogSummary}\nKeep it friendly and formatted for WhatsApp with emojis.`;
+    const answer = await callLiveLLM(userMessage, infoSystem, aiBinding, geminiApiKey);
+    if (answer) {
+      return { text: answer };
+    }
+  }
+
+  // 4. Wholesale RFQ / Pricing Request
   const allProducts = store.getAllProducts();
   const itemsToQuote: Array<{ sku: string; quantity: number; unitPrice: number }> = [];
 
@@ -268,9 +283,75 @@ export async function processMerchantTurn(
     text = `📋 Here is your Quotation #${quoteNumber} for ${quoteItems.map((i) => `${i.quantity} ${i.unit} of ${i.name}`).join(", ")} totaling ₹${total.toLocaleString("en-IN")} (including ${quotation.taxLabel}). All items are in stock and margin-compliant.\n\nWould you like me to confirm this and issue your final Tax Invoice?`;
   }
 
+  // Invoke real live neural LLM (Cloudflare Workers AI Llama 3.3 or Google Gemini)
+  const systemInstruction = "You are Cosmosys Wholesale Depot AI Merchant Copilot on WhatsApp. You communicate with building contractors in India. Keep responses polite, concise, professional, and formatted for WhatsApp with emojis. Always retain exact figures and quotation numbers.";
+  const modelPrompt = `Customer message: "${userMessage}"
+Action taken: Generated Quotation #${quoteNumber} for ₹${total.toLocaleString("en-IN")} (${quoteItems.map((i) => `${i.quantity} ${i.unit} of ${i.name}`).join(", ")}).
+Status: ${status} (Gross Margin: ${overallMarginPercent}%).
+${status === "PENDING_APPROVAL" ? "Explain politely that the requested unit rate is below minimum gross margin and is flagged for Merchant Manager review." : "Present the quote clearly and ask if they wish to confirm and issue the official Tax Invoice."}
+Summarize this for the contractor on WhatsApp.`;
+
+  const liveText = await callLiveLLM(modelPrompt, systemInstruction, aiBinding, geminiApiKey);
+  if (liveText) {
+    text = liveText;
+  }
+
   return {
     text,
     quotation,
     toolCalled: "generate_quotation",
   };
+}
+
+async function callLiveLLM(
+  prompt: string,
+  systemInstruction: string,
+  aiBinding?: any,
+  geminiApiKey?: string
+): Promise<string | null> {
+  // 1. Try Cloudflare Workers AI first (@cf/meta/llama-3.3-70b-instruct)
+  if (aiBinding && typeof aiBinding.run === "function") {
+    try {
+      const res = await aiBinding.run("@cf/meta/llama-3.3-70b-instruct", {
+        messages: [
+          { role: "system", content: systemInstruction },
+          { role: "user", content: prompt },
+        ],
+        max_tokens: 250,
+      });
+      if (res?.response) return res.response.trim();
+    } catch (e) {
+      console.warn("Workers AI Llama 3.3 call fallback:", e);
+    }
+  }
+
+  // 2. Try Google Gemini with active API key
+  if (geminiApiKey) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`;
+      const payload = {
+        system_instruction: { parts: [{ text: systemInstruction }] },
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          maxOutputTokens: 800,
+          temperature: 0.3,
+          thinkingConfig: { thinkingBudget: 0 },
+        },
+      };
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (response.ok) {
+        const data: any = await response.json();
+        const output = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (output) return output.trim();
+      }
+    } catch (e) {
+      console.warn("Gemini live LLM fallback:", e);
+    }
+  }
+
+  return null;
 }
