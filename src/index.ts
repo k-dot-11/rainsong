@@ -7,6 +7,8 @@ import { createAI } from "agents/models/pi-ai";
 import { SqliteStore } from "./db/sqlite-store";
 import { createMerchantTools } from "./tools/merchant-tools";
 import { renderMerchantSystemPrompt } from "./agent/merchant-system-prompt";
+import { createResilientProvider } from "./agent/resilient-provider";
+import { processMerchantTurn } from "./agent/merchant-engine";
 
 export interface Env {
   AI: any;
@@ -40,11 +42,14 @@ export class MerchantAssistant extends DurableObject<Env> {
       tools: merchantTools,
     });
 
+    // Create resilient provider: uses Workers AI Llama 3.3 with edge fallback
+    const resilientProvider = createResilientProvider(this.store, this.ai.provider);
+
     // Initialize PiHarness with Workers AI Llama 3.3
     this.harness = new PiHarness({
       harness: ({ storage, context, onWake }) => {
         const models = createModels();
-        models.setProvider(this.ai.provider);
+        models.setProvider(resilientProvider as any);
         return Harness.open(
           storage,
           { models, registry: this.registry, onWake },
@@ -60,8 +65,8 @@ export class MerchantAssistant extends DurableObject<Env> {
     this.lifecycle = Lifecycle.install(this).use(this.harness);
   }
 
-  // Durable Object Alarm: Checks for expired quotations & maintains lifecycle scheduling
-  async alarm(): Promise<void> {
+  // Durable Object Lifecycle onAlarm: Checks for expired quotations
+  async onAlarm(): Promise<void> {
     const quotations = this.store.getQuotations("PENDING_APPROVAL");
     const now = Date.now();
     for (const q of quotations) {
@@ -71,8 +76,8 @@ export class MerchantAssistant extends DurableObject<Env> {
     }
   }
 
-  // Handle incoming HTTP and API calls routed to this Durable Object
-  async fetch(request: Request): Promise<Response> {
+  // Handle incoming HTTP and API calls routed to this Durable Object via Lifecycle
+  async onRequest(request: Request): Promise<Response> {
     const url = new URL(request.url);
     const path = url.pathname;
 
@@ -93,12 +98,7 @@ export class MerchantAssistant extends DurableObject<Env> {
         const quotations = this.store.getQuotations();
         const invoices = this.store.getInvoices();
         const traces = this.store.getToolTraces(25);
-        let messages: any[] = [];
-        try {
-          messages = await this.harness.messages();
-        } catch (e) {
-          console.warn("Could not read messages transcript:", e);
-        }
+        const messages = this.store.getMessages();
 
         return Response.json(
           {
@@ -113,23 +113,36 @@ export class MerchantAssistant extends DurableObject<Env> {
         );
       }
 
-      // 2. POST /chat - sends message into the Pi agent loop
+      // 2. POST /chat - sends message into the merchant agent loop
       if (path === "/chat" || path === "/api/chat") {
         const body = (await request.json()) as { message: string };
         if (!body.message) {
           return Response.json({ error: "Missing message field" }, { status: 400, headers: corsHeaders });
         }
 
-        const promptResult = await this.harness.prompt(body.message);
+        // Record incoming user message in Durable Object SQLite
+        this.store.saveMessage("user", body.message);
+
+        // Process turn with Workers AI / edge merchant engine
+        const turnResult = await processMerchantTurn(this.store, body.message, this.env.AI);
+
+        // Record agent reply in Durable Object SQLite
+        this.store.saveMessage("assistant", turnResult.text, {
+          quotation: turnResult.quotation,
+          invoice: turnResult.invoice,
+          toolCalled: turnResult.toolCalled,
+        });
+
         const quotations = this.store.getQuotations();
         const invoices = this.store.getInvoices();
         const traces = this.store.getToolTraces(10);
+        const messages = this.store.getMessages();
 
         return Response.json(
           {
-            text: promptResult.text,
-            status: promptResult.status,
-            messages: promptResult.messages,
+            text: turnResult.text,
+            status: "done",
+            messages,
             quotations,
             invoices,
             traces,
@@ -151,22 +164,17 @@ export class MerchantAssistant extends DurableObject<Env> {
           return Response.json({ error: "Quote not found" }, { status: 404, headers: corsHeaders });
         }
 
-        // Steer / prompt the agent with the approval outcome
-        const steerPrompt = `[System Notice: Merchant Manager has APPROVED Quote #${body.quoteNumber}. Note: "${body.note || "Discount approved"}". Notify the customer courteously and ask if they would like to issue the official Tax Invoice.]`;
-        const agentResponse = await this.harness.prompt(steerPrompt, {
-          entry: {
-            kind: "app.approval",
-            data: { approved: true, quoteNumber: body.quoteNumber, by: "Merchant Manager" },
-          },
-        });
+        const steerText = `📢 Great news! Merchant Manager has APPROVED Quotation #${body.quoteNumber} with your requested discount (${body.note || "Approved"}).\n\nWould you like me to book the order and generate the official Tax Invoice now?`;
+        this.store.saveMessage("assistant", steerText, { quoteNumber: body.quoteNumber, approved: true });
 
         return Response.json(
           {
             success: true,
             quote: updated,
-            agentMessage: agentResponse.text,
+            agentMessage: steerText,
             quotations: this.store.getQuotations(),
             traces: this.store.getToolTraces(5),
+            messages: this.store.getMessages(),
           },
           { headers: corsHeaders }
         );
@@ -192,21 +200,17 @@ export class MerchantAssistant extends DurableObject<Env> {
           this.store.saveQuotation(quote);
         }
 
-        const steerPrompt = `[System Notice: Merchant Manager has submitted a COUNTER-OFFER for Quote #${body.quoteNumber}. Revised Unit Rate: ₹${body.counterRate}. Note: "${body.note || "Best possible rate"}". Inform the customer courteously in conversational tone and ask if they agree to proceed with this rate.]`;
-        const agentResponse = await this.harness.prompt(steerPrompt, {
-          entry: {
-            kind: "app.counter_offer",
-            data: { quoteNumber: body.quoteNumber, counterRate: body.counterRate, by: "Merchant Manager" },
-          },
-        });
+        const steerText = `📢 The Merchant Manager has reviewed your discount request for Quotation #${body.quoteNumber} and offered a counter-rate of ₹${body.counterRate} per unit (${body.note || "Special concession rate"}).\n\nDoes this rate work for you? If yes, say 'haan theek hai' to confirm and issue the invoice.`;
+        this.store.saveMessage("assistant", steerText, { quoteNumber: body.quoteNumber, counterRate: body.counterRate });
 
         return Response.json(
           {
             success: true,
             quote,
-            agentMessage: agentResponse.text,
+            agentMessage: steerText,
             quotations: this.store.getQuotations(),
             traces: this.store.getToolTraces(5),
+            messages: this.store.getMessages(),
           },
           { headers: corsHeaders }
         );
@@ -214,7 +218,7 @@ export class MerchantAssistant extends DurableObject<Env> {
 
       // 5. POST /reset - clears current session
       if (path === "/reset" || path === "/api/reset") {
-        await this.harness.session().reset();
+        this.store.clearMessages();
         return Response.json({ success: true, message: "Session reset" }, { headers: corsHeaders });
       }
 

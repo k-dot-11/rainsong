@@ -77,6 +77,14 @@ export class SqliteStore {
         summary TEXT,
         timestamp INTEGER
       );
+
+      CREATE TABLE IF NOT EXISTS chat_messages (
+        id TEXT PRIMARY KEY,
+        role TEXT,
+        text TEXT,
+        metadata_json TEXT,
+        created_at INTEGER
+      );
     `);
   }
 
@@ -346,5 +354,36 @@ export class SqliteStore {
       summary: r.summary,
       timestamp: r.timestamp,
     }));
+  }
+
+  // --- Chat Messages Transcript ---
+  saveMessage(role: "user" | "assistant" | "system", text: string, metadata?: any): void {
+    const id = "msg-" + Math.random().toString(36).substring(2, 9);
+    this.sql.exec(
+      `INSERT INTO chat_messages (id, role, text, metadata_json, created_at)
+       VALUES (?, ?, ?, ?, ?)`,
+      id,
+      role,
+      text,
+      JSON.stringify(metadata || {}),
+      Date.now()
+    );
+  }
+
+  getMessages(): Array<{ id: string; role: string; text: string; metadata?: any; timestamp: number }> {
+    const rows = this.sql
+      .exec("SELECT * FROM chat_messages ORDER BY created_at ASC")
+      .toArray() as any[];
+    return rows.map((r) => ({
+      id: r.id,
+      role: r.role,
+      text: r.text,
+      metadata: JSON.parse(r.metadata_json || "{}"),
+      timestamp: r.created_at,
+    }));
+  }
+
+  clearMessages(): void {
+    this.sql.exec("DELETE FROM chat_messages");
   }
 }

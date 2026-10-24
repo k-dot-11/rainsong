@@ -97,9 +97,9 @@ export const WhatsAppChat: React.FC<WhatsAppChatProps> = ({
       const latestInvoice = data.invoices?.[0];
 
       let attachment: ChatMessage["attachment"] | undefined = undefined;
-      if (latestInvoice && (!invoices.length || latestInvoice.id !== invoices[0]?.id)) {
+      if (latestInvoice && (latestQuote?.status === "CONVERTED" || !invoices.length || latestInvoice.id !== invoices[0]?.id)) {
         attachment = { type: "invoice", data: latestInvoice };
-      } else if (latestQuote && (!quotations.length || latestQuote.id !== quotations[0]?.id)) {
+      } else if (latestQuote && (latestQuote.status === "APPROVED" || latestQuote.status === "PENDING_APPROVAL")) {
         attachment = { type: "quotation", data: latestQuote };
       }
 
