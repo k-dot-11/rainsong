@@ -154,3 +154,16 @@ flowchart TD
 - Integrated seamless fallback between remote Cloudflare Workers AI (`@cf/meta/llama-3.3-70b-instruct`) and local deterministic domain execution.
 - Verified all 4 core scenarios with <20ms response time.
 
+---
+
+## Turn 6: Live Neural Language Model Integration & Multi-Engine Architecture
+
+### Implementation:
+- Linked active neural language model credentials via `.dev.vars` (`env.GEMINI_API_KEY`) and Cloudflare Workers AI (`@cf/meta/llama-3.3-70b-instruct`).
+- Added `callLiveLLM` in [`src/agent/merchant-engine.ts`](file:///home/bugdroid/Github/AI/rainsong/src/agent/merchant-engine.ts) with `thinkingConfig: { thinkingBudget: 0 }` and `maxOutputTokens: 800` to prevent token starvation on reasoning models.
+- Integrated dual-mode execution:
+  1. **Conversational RFQ & Negotiation**: The agent runs live neural generation for WhatsApp contractor communication while binding to deterministic SQLite margin enforcement.
+  2. **Domain Q&A**: Answers technical construction material questions (e.g. 53-grade vs 43-grade compressive strength in MPa) in natural Hinglish directly from the model.
+- Fully verified live on `http://localhost:8787`.
+
+
